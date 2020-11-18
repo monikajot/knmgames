@@ -25,7 +25,7 @@ class Game:
         if self.current_state[x][y] != '_':
             return False
         #check if the cell is within the dimensions of the board, if it's not, return False
-        if (x >= self.n) or (x < 0) or (y >= self.m) or (y < 0):
+        if (x >= self.m) or (x < 0) or (y >= self.n) or (y < 0):
             return False
         return True
 
@@ -165,7 +165,6 @@ class Game:
                     v, v_x, v_y = self.MIN_VALUE()
                     self.current_state[v_x][v_y] = 'o'
                     self.turn = 'X'
-
 
 
 if __name__ == '__main__':
