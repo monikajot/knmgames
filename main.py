@@ -10,15 +10,11 @@ class Game:
         self.k = k
         self.utility = 0
         self.initialize_game()
-        #Max will start the game
+        #This indicates what player starts the game. Right now is Max
         self.turn = 'X'
 
     def initialize_game(self):
         self.current_state = np.full((self.m, self.n), "_", dtype=object)
-        #self.o = []
-        #self.x = []
-        #return self.current_state
-        #Max will start the game
 
     def drawboard(self):
         print(self.current_state)
@@ -28,23 +24,25 @@ class Game:
         #check is the chosen cell is empty, if it's not return False (not valid)
         if self.current_state[x][y] != '_':
             return False
-        #check if the cell is within the dimensions of the board
+        #check if the cell is within the dimensions of the board, if it's not, return False
         if (x >= self.n) or (x < 0) or (y >= self.m) or (y < 0):
             return False
         return True
 
     def is_terminal(self):
-        #check horizontally and vertically
+        #check if there is a win horizontally or vertically
         Max_win = 'X' * self.k
         Min_win = 'o' * self.k
         for j in range(2):
             board = self.current_state
             if j == 1:
+                #Transpose the board, so you can check vertically, but using the same method as horizontally
                 board = self.current_state.T
-            for i in range(self.m):
+            #for i in range(self.m):
+            for i in range(board.shape[0]):
                 l = board[i].tolist()
                 final = "".join(l)
-                #if Max or Min win, update the utility of the game and return True
+                #if Max or Min win, update the utility of the game to 1/-1/0 and return True
                 if Max_win in final:
                     self.utility = 1
                     return True
@@ -72,13 +70,15 @@ class Game:
             for j in range(self.n):
                 if self.current_state[i][j] == '_':
                     tie = False
+        #if there is a tie, set the utility of the game to 0 and return True
         if tie:
+            self.utility = 0
             return True
         return False
 
 
     def MAX_VALUE(self):
-        #check if the game is over
+        #check if the game is over, and return the utility in that case
         end = self.is_terminal()
         if end:
             return self.utility, 0, 0
@@ -94,7 +94,7 @@ class Game:
                     #by calling MIN_VALUE
                     self.current_state[j][i] = 'X'
                     minv, minx, miny = self.MIN_VALUE()
-                    #if the minv is greater than our current v, set v to minv and your best action to i,
+                    #if the minv is greater than our current v, set v to minv and your best action to j, i
                     if v < minv:
                         v = minv
                         best_x = j
@@ -104,7 +104,7 @@ class Game:
         return v, best_x, best_y
 
     def MIN_VALUE(self):
-        # returns utility value
+        #check if the game is over, and return the utility in that case
         end = self.is_terminal()
         if end:
             return self.utility, 0, 0
@@ -116,18 +116,18 @@ class Game:
                 if self.current_state[j][i] == '_':
                     self.current_state[j][i] = 'o'
                     maxv, maxx, maxy = self.MAX_VALUE()
+                    #if the maxv is smaller than our current v, set v to maxv and your best action to j, i
                     if v > maxv:
                         v = maxv
                         best_x = j
                         best_y = i
-                    #best_action = (j, i)
                     self.current_state[j][i] = '_'
         return v, best_x, best_y
 
     def play(self):
         game_over = False
         while not game_over:
-            #check if the game is done
+            #check if the game is done, and if it is print the board and type who wins
             if self.is_terminal():
                 if self.utility == 1:
                     print(self.drawboard())
@@ -145,19 +145,22 @@ class Game:
                 print(self.current_state)
                 #when it's Max's turn
                 if self.turn == 'X':
+                    #get our recommendations for Max, and ask Max (the player) to input its move
                     v, v_x, v_y = self.MAX_VALUE()
-                    print("Max, our recommendation is x=" + str(v_x) +"y= " + str(v_y))
+                    print("Max, our recommendation is x = " + str(v_x) +" and y = " + str(v_y))
+                    #Check if the inputted entries are valid, if it's not, ask again
                     valid = False
                     while not valid:
-                        mx = int(input("Please enter your choice for coordinate x = "))
-                        my = int(input("Please enter your choice for coordinate y = "))
-                        if self.is_valid((mx, my)):
-                            self.current_state[mx][my] = 'X'
+                        x = int(input("Please enter your choice for coordinate x = "))
+                        y = int(input("Please enter your choice for coordinate y = "))
+                        if self.is_valid((x, y)):
+                            self.current_state[x][y] = 'X'
+                            #change the turn to Min
                             self.turn = 'o'
                             valid = True
                         else:
                             print("Your chosen coordinates are not valid. Please try again")
-                #When it's Min's turn
+                #When it's Min's turn, get the optimal coordinates and play those coordinates
                 else:
                     v, v_x, v_y = self.MIN_VALUE()
                     self.current_state[v_x][v_y] = 'o'
@@ -165,13 +168,9 @@ class Game:
 
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     game = Game(3, 3, 3)
     game.play()
-    #game.initialize_game()
-    #game.drawboard()
-    #game.current_state = np.zeros((3,3))+np.diagonal()
-    #print(game.is_terminal())
+
 
 
