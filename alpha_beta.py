@@ -1,6 +1,6 @@
 import numpy as np
+import math
 import time
-
 
 class Game:
 
@@ -77,13 +77,13 @@ class Game:
         return False
 
 
-    def MAX_VALUE(self):
+    def MAX_VALUE(self, alpha, beta):
         #check if the game is over, and return the utility in that case
         end = self.is_terminal()
         if end:
             return self.utility, 0, 0
         #set v to -infinity
-        v = -2 #float('inf')
+        v = -float('inf')
         best_x = None
         best_y = None
         #check what coordinates are blank in the current state. Each blank coordinate will be a node in our tree
@@ -93,7 +93,7 @@ class Game:
                     #set the blank coordinate to 'X' and get the utility value of having (j,i) as the next move
                     #by calling MIN_VALUE
                     self.current_state[j][i] = 'X'
-                    minv, minx, miny = self.MIN_VALUE()
+                    minv, minx, miny = self.MIN_VALUE(alpha, beta)
                     #if the minv is greater than our current v, set v to minv and your best action to j, i
                     if v < minv:
                         v = minv
@@ -101,31 +101,41 @@ class Game:
                         best_y = i
                      #set the current_state back to '_' since we haven't yet made a move
                     self.current_state[j][i] = '_'
+
+                    if v >= beta:
+                        return (v, best_x, best_y)
+                    if v > alpha:
+                        alpha = v
         return v, best_x, best_y
 
-    def MIN_VALUE(self):
+    def MIN_VALUE(self,alpha, beta):
         #check if the game is over, and return the utility in that case
         end = self.is_terminal()
         if end:
             return self.utility, 0, 0
-        v = 2 #float('inf')
+        v = float('inf')
         best_x = None
         best_y = None
         for j in range(self.m):
             for i in range(self.n):
                 if self.current_state[j][i] == '_':
                     self.current_state[j][i] = 'o'
-                    maxv, maxx, maxy = self.MAX_VALUE()
+                    maxv, maxx, maxy = self.MAX_VALUE(alpha, beta)
                     #if the maxv is smaller than our current v, set v to maxv and your best action to j, i
                     if v > maxv:
                         v = maxv
                         best_x = j
                         best_y = i
                     self.current_state[j][i] = '_'
+                    if v <= alpha:
+                        return (v, best_x, best_y)
+                    if v < beta:
+                        beta = v
         return v, best_x, best_y
 
     def play(self):
         game_over = False
+        i=0
         while not game_over:
             #check if the game is done, and if it is print the board and type who wins
             if self.is_terminal():
@@ -142,20 +152,26 @@ class Game:
                     print("There is a tie, no one wins")
                     game_over = True
             else:
+                if i==0:
+                    print('The game begins')
+                    i+=1
+                else:
+                    print('Mins move')
                 print(self.current_state)
                 #when it's Max's turn
+
                 if self.turn == 'X':
                     #get our recommendations for Max, and ask Max (the player) to input its move
                     start = time.time()
-                    v, v_x, v_y = self.MAX_VALUE()
+                    v, v_x, v_y = self.MAX_VALUE(-float('inf'), float('inf'))
                     end = time.time()
                     print('Evaluation time: {}s'.format(round(end - start, 7)))
 
-                    print("Max, our recommendation for row is " + str(v_x) +" and column is " + str(v_y))
+                    print("Max, our recommendation is x = " + str(v_x) +" and y = " + str(v_y))
                     #Check if the inputted entries are valid, if it's not, ask again
                     valid = False
                     while not valid:
-                        x = int(input("Please enter your choice for row from 0, 1 or 2: = "))
+                        x = int(input("Please enter your choice for row from 0, 1 or 2: "))
                         y = int(input("Please enter your choice for column from 0, 1 or 2: "))
                         if self.is_valid((x, y)):
                             self.current_state[x][y] = 'X'
@@ -166,14 +182,13 @@ class Game:
                             print("Your chosen coordinates are not valid. Please try again")
                 #When it's Min's turn, get the optimal coordinates and play those coordinates
                 else:
-                    v, v_x, v_y = self.MIN_VALUE()
+                    v, v_x, v_y = self.MIN_VALUE(-float('inf'),float('inf'))
                     self.current_state[v_x][v_y] = 'o'
                     self.turn = 'X'
 
 
 if __name__ == '__main__':
-    game = Game(3, 3, 3)
+    game = Game(3,3,3)
     game.play()
-
 
 
