@@ -12,6 +12,7 @@ class Game:
         self.initialize_game()
         #This indicates what player starts the game. Right now is Max
         self.turn = 'X'
+        self.visited_states = 0
 
     def initialize_game(self):
         self.current_state = np.full((self.m, self.n), "_", dtype=object)
@@ -86,10 +87,12 @@ class Game:
         v = -float('inf')
         best_x = None
         best_y = None
+        visited_states = 0
         #check what coordinates are blank in the current state. Each blank coordinate will be a node in our tree
         for j in range(self.m):
             for i in range(self.n):
                 if self.current_state[j][i] == '_':
+                    visited_states += 1
                     #set the blank coordinate to 'X' and get the utility value of having (j,i) as the next move
                     #by calling MIN_VALUE
                     self.current_state[j][i] = 'X'
@@ -106,6 +109,7 @@ class Game:
                         return (v, best_x, best_y)
                     if v > alpha:
                         alpha = v
+        self.visited_states = self.visited_states + visited_states
         return v, best_x, best_y
 
     def MIN_VALUE(self,alpha, beta):
@@ -116,9 +120,11 @@ class Game:
         v = float('inf')
         best_x = None
         best_y = None
+        visited_states = 0
         for j in range(self.m):
             for i in range(self.n):
                 if self.current_state[j][i] == '_':
+                    visited_states += 1
                     self.current_state[j][i] = 'o'
                     maxv, maxx, maxy = self.MAX_VALUE(alpha, beta)
                     #if the maxv is smaller than our current v, set v to maxv and your best action to j, i
@@ -131,6 +137,7 @@ class Game:
                         return (v, best_x, best_y)
                     if v < beta:
                         beta = v
+        self.visited_states = self.visited_states + visited_states
         return v, best_x, best_y
 
     def play(self):
@@ -166,13 +173,14 @@ class Game:
                     v, v_x, v_y = self.MAX_VALUE(-float('inf'), float('inf'))
                     end = time.time()
                     print('Evaluation time: {}s'.format(round(end - start, 7)))
-
+                    print('The amount of visited states was')
+                    print(self.visited_states)
                     print("Max, our recommendation is x = " + str(v_x) +" and y = " + str(v_y))
                     #Check if the inputted entries are valid, if it's not, ask again
                     valid = False
                     while not valid:
-                        x = int(input("Please enter your choice for row from 0, 1 or 2: "))
-                        y = int(input("Please enter your choice for column from 0, 1 or 2: "))
+                        x = int(input("Please enter your choice for row from 0 to " + str(self.m)))
+                        y = int(input("Please enter your choice for column from 0 to " + str(self.n)))
                         if self.is_valid((x, y)):
                             self.current_state[x][y] = 'X'
                             #change the turn to Min
@@ -182,13 +190,13 @@ class Game:
                             print("Your chosen coordinates are not valid. Please try again")
                 #When it's Min's turn, get the optimal coordinates and play those coordinates
                 else:
-                    v, v_x, v_y = self.MIN_VALUE(-float('inf'),float('inf'))
+                    v, v_x, v_y = self.MIN_VALUE(-float('inf'), float('inf'))
                     self.current_state[v_x][v_y] = 'o'
                     self.turn = 'X'
 
 
 if __name__ == '__main__':
-    game = Game(3,3,3)
+    game = Game(3, 3, 3)
     game.play()
 
 
